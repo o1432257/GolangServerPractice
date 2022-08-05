@@ -64,6 +64,21 @@ func (c *Client) menu() bool {
 
 }
 
+func (c *Client) UpdateName() bool {
+
+	fmt.Println(">>>>>請輸入用戶名:")
+	fmt.Scanln(&c.Name)
+
+	sendMsg := "rename|" + c.Name + "\n"
+	_, err := c.conn.Write([]byte(sendMsg))
+	if err != nil {
+		fmt.Println("conn.Write err:", err)
+		return false
+	}
+
+	return true
+}
+
 func (c *Client) Run() {
 	for c.flag != 0 {
 		for c.menu() != true {
@@ -79,7 +94,7 @@ func (c *Client) Run() {
 			fmt.Println("私人聊天室選擇中.....")
 		case 3:
 			//更新用戶名
-			fmt.Println("更新用戶名選擇中.....")
+			c.UpdateName()
 			break
 		}
 	}
