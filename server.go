@@ -56,14 +56,9 @@ func (s *Server) Handler(conn net.Conn) {
 	//當前連接的業務
 	fmt.Println("連結建立成功")
 
-	user := NewUser(conn)
+	user := NewUser(conn, s)
 	//用戶上線了
-	s.mapLock.Lock()
-	s.OnlineMap[user.Name] = user
-	s.mapLock.Unlock()
-
-	//廣播當前用戶上線了
-	s.BoardCast(user, "已上線")
+	user.Online()
 
 	//接受客戶端發送的消息
 	go func() {
@@ -72,7 +67,7 @@ func (s *Server) Handler(conn net.Conn) {
 			n, err := conn.Read(buf)
 
 			if n == 0 {
-				s.BoardCast(user, "下線")
+				user.Offline()
 				return
 			}
 
@@ -85,7 +80,7 @@ func (s *Server) Handler(conn net.Conn) {
 			msg := string(buf[:n-1])
 
 			//將用戶的消息進行廣播
-			s.BoardCast(user, msg)
+			user.DoMessage(msg)
 		}
 	}()
 }
