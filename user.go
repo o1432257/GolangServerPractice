@@ -50,9 +50,23 @@ func (u *User) Offline() {
 	u.server.BoardCast(u, "已下線")
 }
 
+func (u *User) SendMessage(msg string) {
+	u.conn.Write([]byte(msg))
+}
+
 // 處理訊息
 func (u *User) DoMessage(msg string) {
-	u.server.BoardCast(u, msg)
+	if msg == "who" {
+		//查詢當前在線用戶
+		u.server.mapLock.Lock()
+		for _, user := range u.server.OnlineMap {
+			onlineMsg := "[" + user.Addr + "]" + user.Name + ":" + "在線...\n"
+			u.SendMessage(onlineMsg)
+		}
+		u.server.mapLock.Unlock()
+	} else {
+		u.server.BoardCast(u, msg)
+	}
 }
 
 // 監聽當前user channel 一旦有消息 發送訊息到客戶端
