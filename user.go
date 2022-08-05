@@ -1,6 +1,8 @@
 package main
 
-import "net"
+import (
+	"net"
+)
 
 type User struct {
 	Name string
@@ -56,17 +58,41 @@ func (u *User) SendMessage(msg string) {
 
 // 處理訊息
 func (u *User) DoMessage(msg string) {
+
+	//查詢當前在線用戶
 	if msg == "who" {
-		//查詢當前在線用戶
 		u.server.mapLock.Lock()
 		for _, user := range u.server.OnlineMap {
 			onlineMsg := "[" + user.Addr + "]" + user.Name + ":" + "在線...\n"
 			u.SendMessage(onlineMsg)
 		}
 		u.server.mapLock.Unlock()
-	} else {
-		u.server.BoardCast(u, msg)
+		return
 	}
+
+	//更改用戶名
+	if len(msg) > 7 && msg[:7] == "rename|" {
+		//消息格式:rename|userName
+		newName := msg[7:]
+
+		_, ok := u.server.OnlineMap[newName]
+
+		if ok {
+			u.SendMessage("用戶名已使用")
+		} else {
+			u.server.mapLock.Lock()
+			delete(u.server.OnlineMap, u.Name)
+			u.server.OnlineMap[newName] = u
+			u.server.mapLock.Unlock()
+
+			u.Name = newName
+			u.SendMessage("您已更新用戶名:" + u.Name + "\n")
+		}
+		return
+	}
+
+	//廣播
+	u.server.BoardCast(u, msg)
 }
 
 // 監聽當前user channel 一旦有消息 發送訊息到客戶端
