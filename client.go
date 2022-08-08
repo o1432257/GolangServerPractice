@@ -91,7 +91,7 @@ func (c *Client) Run() {
 			c.PublicChat()
 		case 2:
 			//私人聊天室
-			fmt.Println("私人聊天室選擇中.....")
+			c.PrivateChat()
 		case 3:
 			//更新用戶名
 			c.UpdateName()
@@ -120,6 +120,49 @@ func (c *Client) PublicChat() {
 		chatMsg = ""
 		fmt.Println(">>>>>請輸入聊天內容,exit退出")
 		fmt.Scanln(&chatMsg)
+	}
+}
+
+// 查詢在線用戶
+func (c *Client) SelectUsers() {
+	sendMsg := "who\n"
+	_, err := c.conn.Write([]byte(sendMsg))
+	if err != nil {
+		fmt.Println("conn Write, err")
+		return
+	}
+}
+
+// 私人聊天室
+func (c *Client) PrivateChat() {
+	var remoteName string
+	var chatMsg string
+	c.SelectUsers()
+	fmt.Println(">>>>>請輸入聊天對象的用戶名, exit退出")
+	fmt.Scanln(&remoteName)
+
+	for remoteName != "exit" {
+		fmt.Println(">>>>>請輸入消息內容, exit退出")
+		fmt.Scanln(&chatMsg)
+
+		for chatMsg != "exit" {
+			if len(chatMsg) != 0 {
+				sendMsg := "to|" + remoteName + "|" + chatMsg + "\n"
+				_, err := c.conn.Write([]byte(sendMsg))
+				if err != nil {
+					fmt.Println("conn Write err:", err)
+					break
+				}
+			}
+
+			chatMsg = ""
+			fmt.Println(">>>>>請輸入消息內容, exit退出")
+			fmt.Scanln(&chatMsg)
+		}
+
+		c.SelectUsers()
+		fmt.Println(">>>>>請輸入聊天對象的用戶名, exit退出")
+		fmt.Scanln(&remoteName)
 	}
 }
 
